@@ -4,8 +4,9 @@ import { StatusBar } from "react-native";
 import HomeScreen from "../screens/Home.js";
 import LoginScreen from "../screens/Login.js";
 import SignupScreen from "../screens/Signup.js";
-import DrawerScreen from "../screens/Drawer.js";
 import LearnScreen from "../screens/Learn.js";
+import DrawerScreen from "../screens/Drawer.js";
+import DeleteAccountScreen from "../screens/DeleteAccount.js";
 
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
@@ -27,6 +28,7 @@ export default function Navigator({ initialRoute }) {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="Learn" component={LearnScreen} />
+        <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

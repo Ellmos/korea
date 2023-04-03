@@ -1,38 +1,61 @@
-import React, { useState, useRef } from "react";
-import { SafeAreaView, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, View, Keyboard, Image, Alert, Animated, BackHandler } from "react-native";
+import React, { useState } from "react";
+import { SafeAreaView, Text, TouchableOpacity, TouchableWithoutFeedback, TextInput, View, Keyboard, Image, Alert, ActivityIndicator } from "react-native";
 
 import * as SecureStore from "expo-secure-store";
 import { CommonActions } from "@react-navigation/native";
 
 import styles from "../Styles.js";
 
-import { LoadingPopup } from "../components/LoadingPopup.js";
-import { DeleteRequest } from "../utils/Request.js";
+import { DeleteUserRequest } from "../utils/Request.js";
 
-export default function DeleteAccount({ route, navigation }) {
+export default function DeleteAccountScreen({ route, navigation }) {
   const username = route.params.username;
+  const token = route.params.token;
 
   const [passwordText, setPasswordText] = useState("");
   const [passwordHidden, setPasswordHidden] = useState(true);
+  const [isRequesting, setIsRequesting] = useState(false);
 
-  const CheckCreds = async () => {
+  async function CheckCreds() {
     Keyboard.dismiss();
     if (!passwordText) {
-      Alert.alert("missingInput", "pleaseEnterPassword");
+      Alert.alert("Missing input", "Please enter your password");
       return;
     }
-  };
+
+    try {
+      setIsRequesting(true);
+      const resp = await DeleteUserRequest(username.trim().toLowerCase(), passwordText, token);
+      setIsRequesting(false);
+      if (resp.success) {
+        DeleteAccount();
+      } else {
+        switch (resp.error) {
+          case "WRONG_PASSWORD":
+            Alert.alert("Wrong password", "Please verify your password");
+            break;
+          default:
+            Alert.alert("Error", "An error has occured");
+            break;
+        }
+      }
+    } catch (e) {
+      if (e === "timeout") {
+        Alert.alert("Could not login", "Check your internet connection and try again");
+      } else {
+        console.error(e);
+      }
+    }
+  }
 
   const DeleteAccount = async () => {
-    popupRef.current?.HidePopup();
     await SecureStore.deleteItemAsync("token");
     await SecureStore.deleteItemAsync("username");
     await SecureStore.deleteItemAsync("password");
-    await SecureStore.deleteItemAsync("form");
 
     Alert.alert(
-      "accountDeleted",
-      "accountDeletedMessage",
+      "Account Deleted",
+      "Your account has benn deleted\nYou will be redirected to the home screen",
       [
         {
           text: "OK",
@@ -43,7 +66,6 @@ export default function DeleteAccount({ route, navigation }) {
     );
   };
 
-  const popupRef = useRef(null);
   //------------------------------------------------------------------------//
   //-------------------------------Window-----------------------------------//
   //------------------------------------------------------------------------//
@@ -51,14 +73,14 @@ export default function DeleteAccount({ route, navigation }) {
     <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()} style={styles.container}>
       <SafeAreaView style={[styles.container, { backgroundColor: "#222222ee" }]}>
         <View style={styles.deleteContainer}>
-          <Text style={styles.deleteTitle}>{"deleteAccount?"}</Text>
-          <Text style={styles.deleteSubTitle}>{"deleteAccountWarning"}</Text>
+          <Text style={styles.deleteTitle}>{"Delete Account?"}</Text>
+          <Text style={styles.deleteSubTitle}>{"This action is irreversible\nTo confirm your account deletion enter your password"}</Text>
 
           <View style={styles.deleteElement}>
             <View style={{ flexDirection: "row", width: "100%", alignSelf: "flex-start" }}>
               <TextInput
                 style={styles.deleteInput}
-                placeholder={"enterPassword"}
+                placeholder={"Enter your password"}
                 placeholderTextColor="grey"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -82,15 +104,18 @@ export default function DeleteAccount({ route, navigation }) {
           </View>
 
           <TouchableOpacity style={styles.deleteButton} onPress={() => CheckCreds()}>
-            <Text style={styles.permissionButtonText}>{"confirm"}</Text>
+            <Text style={styles.permissionButtonText}>{"Confirm"}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.deleteBackButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.permissionButtonText}>{"back"}</Text>
+            <Text style={styles.permissionButtonText}>{"Back"}</Text>
           </TouchableOpacity>
         </View>
-
-        <LoadingPopup ref={popupRef} />
+        {isRequesting && (
+          <SafeAreaView style={[styles.absoluteContainer, { backgroundColor: isRequesting ? "#00000055" : "#00000000" }]}>
+            <ActivityIndicator size="large" style={{ transform: [{ scale: 1.5 }] }} />
+          </SafeAreaView>
+        )}
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );

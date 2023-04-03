@@ -1,5 +1,5 @@
 //const url = "https://korea.la-banquise.fr/";
-const url = "http://192.168.113.191:8000/";
+const url = "http://192.168.200.181:8000/";
 
 export async function Sleep(time) {
   return new Promise((resolve) => setTimeout(resolve, time));
@@ -11,21 +11,32 @@ const timeout = (prom, time, exception) => {
 };
 
 const handleRequest = async (url, method, body, headers = {}) => {
-  const resp = await fetch(url, {
-    method: method,
-    mode: "cors",
-    headers: { "Content-Type": "application/json", ...headers },
-    body: JSON.stringify(body),
-  });
+  var resp;
+
+  if (method === "GET") {
+    resp = await fetch(url, {
+      method: method,
+      mode: "cors",
+      headers: headers,
+    });
+  } else {
+    resp = await fetch(url, {
+      method: method,
+      mode: "cors",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify(body),
+    });
+  }
 
   const jsonResp = await resp.json();
   console.log(jsonResp);
   return jsonResp;
 };
 
+//-------------------------------USERS---------------------------------//
 export async function LoginRequest(username, password) {
   try {
-    const request = handleRequest(url + "auth/login", "POST", {
+    const request = handleRequest(url + "users/login", "POST", {
       username: username.toLowerCase().trim(),
       password: password,
     });
@@ -33,13 +44,13 @@ export async function LoginRequest(username, password) {
     const resp = await timeout(request, 5000, "timeout");
     return resp;
   } catch (e) {
-    throw e;
+    console.error(e);
   }
 }
 
 export async function SignupRequest(username, password, email) {
   try {
-    const request = handleRequest(url + "auth/register", "POST", {
+    const request = handleRequest(url + "users/register", "POST", {
       username: username.toLowerCase().trim(),
       password: password,
       email: email.toLowerCase().trim(),
@@ -48,14 +59,27 @@ export async function SignupRequest(username, password, email) {
     const resp = await timeout(request, 5000, "timeout");
     return resp;
   } catch (e) {
-    throw e;
+    console.error(e);
   }
 }
+
+export async function DeleteUserRequest(username, password, token) {
+  try {
+    const request = handleRequest(`${url}users/delete?username=${username}&password=${password}`, "DELETE", {}, { Authorization: "Bearer " + token });
+
+    const resp = await timeout(request, 5000, "timeout");
+    return resp;
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+//-------------------------------WORDS---------------------------------//
 
 export async function CreateWordRequest(word, translation, username, token) {
   try {
     const request = handleRequest(
-      url + "app/createword",
+      url + "app/words",
       "POST",
       {
         word: word.trim(),
@@ -68,6 +92,17 @@ export async function CreateWordRequest(word, translation, username, token) {
     const resp = await timeout(request, 5000, "timeout");
     return resp;
   } catch (e) {
-    throw e;
+    console.error(e);
+  }
+}
+
+export async function GetWordRequest(username, token) {
+  try {
+    const request = handleRequest(`${url}app/words?username=${username}`, "GET", {}, { Authorization: "Bearer " + token });
+
+    const resp = await timeout(request, 5000, "timeout");
+    return resp;
+  } catch (e) {
+    console.error(e);
   }
 }

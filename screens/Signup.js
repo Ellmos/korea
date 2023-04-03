@@ -93,7 +93,9 @@ export default function SignupScreen({ navigation }) {
     } catch (e) {
       if (e === "timeout") {
         Alert.alert("Could not login", "Check your internet connection and try again");
-      } else throw e;
+      } else {
+        console.error(e);
+      }
     }
   }
   const InvalidInputAlert = (title, message, invalidInputs) => {

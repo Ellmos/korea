@@ -164,7 +164,7 @@ export default StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     alignSelf: "flex-start",
-    color: "#79837e",
+    color: "#aaaaaa",
     marginBottom: 15,
   },
 
@@ -214,6 +214,19 @@ export default StyleSheet.create({
     textAlignVertical: "top",
     color: "black",
   },
+
+  //-----------------------------------------------------------------------//
+  //----------------------------Learn Screen-------------------------------//
+  //-----------------------------------------------------------------------//
+
+  learnContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "flex-start",
+    width: "100%",
+    height: "100%",
+  },
+
   //-----------------------------------------------------------------------//
   //-------------------------Permission Screens----------------------------//
   //-----------------------------------------------------------------------//
@@ -286,13 +299,6 @@ export default StyleSheet.create({
   },
 
   //------------------------Items-----------------------------
-  drawerLine: {
-    borderColor: "grey",
-    borderTopWidth: 1,
-    width: "60%",
-    marginVertical: 15,
-  },
-
   drawerItem: {
     width: "100%",
     flexDirection: "row",
@@ -311,53 +317,6 @@ export default StyleSheet.create({
     fontWeight: "500",
     color: "orange",
   },
-
-  //------------------------Dropdown-----------------------------
-  languageDropdownContainer: {
-    flexDirection: "row",
-    width: 250,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  languageTitle: {
-    color: "white",
-    width: 118,
-    fontSize: 17,
-    fontWeight: "500",
-    textAlign: "center",
-    marginRight: 10,
-  },
-
-  languageDropdownButton: {
-    backgroundColor: "#222222",
-    borderColor: "grey",
-    width: "60%",
-    height: 35,
-    borderWidth: 1,
-    borderRadius: 5,
-  },
-
-  languageDropdown: {
-    backgroundColor: "#222222",
-    borderColor: "grey",
-    borderWidth: 1,
-    borderRadius: 15,
-    color: "white",
-  },
-
-  languageDropdownItemText: {
-    fontSize: 17,
-    fontWeight: "500",
-    color: "white",
-  },
-
-  languageDropdownIcon: {
-    width: 22,
-    height: 22,
-    marginRight: 10,
-    top: 2,
-  },
-
   //-----------------------------------------------------------------------//
   //------------------------Delete Account Screen--------------------------//
   //-----------------------------------------------------------------------//

@@ -22,7 +22,7 @@ export default function LoginScreen({ navigation }) {
         const username = await SecureStore.getItemAsync("username");
         setUsernameText(username);
       } catch (e) {
-        throw e;
+        console.error(e);
       }
     };
 
@@ -70,7 +70,6 @@ export default function LoginScreen({ navigation }) {
             Alert.alert("This email does not exist", "Try your username");
             break;
           default:
-            console.log(resp);
             Alert.alert("An error occured", "Please try again");
             break;
         }
@@ -78,7 +77,9 @@ export default function LoginScreen({ navigation }) {
     } catch (e) {
       if (e === "timeout") {
         Alert.alert("Could not login", "Check your internet connection and try again");
-      } else throw e;
+      } else {
+        console.error(e);
+      }
     }
   }
 
@@ -175,7 +176,7 @@ export default function LoginScreen({ navigation }) {
                 </TouchableOpacity>
 
                 <TouchableOpacity style={{}} onPress={() => WebBrowser.openBrowserAsync("https://sharedfolder.dynedoc.fr/wordpress/index.php/password-reset")}>
-                  <Text style={[styles.loginLinkerText, { color: "#aaaaaa" }]}>Forgot your password?</Text>
+                  <Text style={styles.loginLinkerText}>Forgot your password?</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={{ flexDirection: "row" }} onPress={() => navigation.navigate("Signup")}>

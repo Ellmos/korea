@@ -12,16 +12,20 @@ export default function DrawerScreen({ route, navigation }) {
   const isLearn = route.params.origin == "Learn";
 
   const [username, setUsername] = useState(null);
+  const [token, setToken] = useState(null);
   useEffect(() => {
-    const getUsername = async () => {
+    const getUserData = async () => {
       try {
         const username = await SecureStore.getItemAsync("username");
+        const token = await SecureStore.getItemAsync("token");
+        setToken(token);
         setUsername(username);
       } catch (e) {
-        throw e;
+        console.error(e);
       }
     };
-    if (isLearn) getUsername();
+
+    if (isLearn) getUserData();
   }, []);
 
   const LogOut = () => {
@@ -30,7 +34,7 @@ export default function DrawerScreen({ route, navigation }) {
       SecureStore.deleteItemAsync("token");
       SecureStore.deleteItemAsync("form");
     } catch (e) {
-      throw e;
+      console.error(e);
     }
     navigation.dispatch(CommonActions.reset({ index: 0, routes: [{ name: "Home" }] }));
   };
@@ -63,7 +67,7 @@ export default function DrawerScreen({ route, navigation }) {
           onSelect={(_, index) => {
             if (index == 0) WebBrowser.openBrowserAsync("https://sharedfolder.dynedoc.fr/wordpress/index.php/compte/" + username);
             else if (index == 1) LogOut();
-            else navigation.navigate("DeleteAccount", { username: username });
+            navigation.navigate("DeleteAccount", { username: username, token: token });
           }}
           buttonTextAfterSelection={(selectedItem) => {
             return selectedItem;

@@ -36,7 +36,9 @@ export default function App() {
         if (e === "timeout") {
           setInitialRoute("Home");
           console.error("Timeout error\nCould not retieved token from server");
-        } else throw e;
+        } else {
+          console.error(e);
+        }
       } finally {
         setAppIsReady(true);
       }

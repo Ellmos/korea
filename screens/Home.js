@@ -29,7 +29,7 @@ export default function HomeScreen({ navigation }) {
       <ImageBackground source={require("../assets/images/background.png")} resizeMode="cover" style={[styles.background, { justifyContent: "space-evenly" }]}>
         {/* --------------------------------HOME------------------------------ */}
         <View style={[styles.container, { justifyContent: "space-evenly" }]}>
-          <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("Drawer", (params = { origin: "Home" }))} hitSlop={styles.hitslop}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate("Drawer", { origin: "Home" })} hitSlop={styles.hitslop}>
             <Image source={require("../assets/images/drawerButton.png")} style={styles.backButtonImage} />
           </TouchableOpacity>
           <View
