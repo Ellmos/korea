@@ -1,19 +1,20 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Keyboard, SafeAreaView, Image, BackHandler, Alert, ImageBackground, ActivityIndicator } from "react-native";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { View, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, ScrollView, SafeAreaView, Image, BackHandler, Alert, ImageBackground, Keyboard } from "react-native";
 
+import Dialog from "react-native-dialog";
 import * as SecureStore from "expo-secure-store";
 import { useFocusEffect } from "@react-navigation/native";
 
 import styles from "../Styles.js";
-import { CreateWordRequest, GetWordRequest } from "../utils/Request.js";
+import { CreateWordRequest } from "../utils/Request.js";
 
 export default function LearnScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       const onBackPress = () => {
-        Alert.alert("RE-MED", "leaveApp", [
-          { text: "stay", onPress: () => null, style: "destructive" },
-          { text: "leave", onPress: () => BackHandler.exitApp() },
+        Alert.alert("Korea", "Do you want to leave the app?", [
+          { text: "Stay", onPress: () => null, style: "destructive" },
+          { text: "Leave", onPress: () => BackHandler.exitApp() },
         ]);
         return true;
       };
@@ -25,16 +26,22 @@ export default function LearnScreen({ navigation }) {
 
   const [username, setUsername] = useState("");
   const [token, setToken] = useState("");
+  const [currentWords, setCurrentWords] = useState();
+  const [allWords, setAllWords] = useState();
 
   useEffect(() => {
     const getUserData = async () => {
       try {
         const username = await SecureStore.getItemAsync("username");
         const token = await SecureStore.getItemAsync("token");
+        const cache = await SecureStore.getItemAsync("cache");
+        setCurrentWords(JSON.parse(cache));
+        setAllWords(JSON.parse(cache));
         setToken(token);
         setUsername(username);
       } catch (e) {
-        console.error(e);
+        if (e === "timeout") Alert.alert("Could not retrieve words", "Check your internet connection and try again");
+        else console.error(e);
       }
     };
 
@@ -42,21 +49,59 @@ export default function LearnScreen({ navigation }) {
   }, []);
 
   //------------------------------------------------------------------------------------//
+
+  const WordsDisplay = () => {
+    if (!currentWords) return;
+
+    return (
+      <View style={{ width: "100%" }}>
+        {currentWords.map((word, index) => {
+          return (
+            <TouchableOpacity
+              key={index}
+              delayPressIn={700}
+              style={[styles.wordLine, { backgroundColor: index % 2 == 0 ? "#02a9ea55" : "#02191a55" }]}
+              onPress={() => Keyboard.dismiss()}
+              onLongPress={() => Alert.alert("Long press on:", word.word)}
+            >
+              <Text style={{ width: "50%", fontSize: 15, textAlign: "center" }}>{word.word}</Text>
+              <Text style={{ width: "50%", fontSize: 15, textAlign: "center" }}>{word.translation}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+
+  const [searchText, setSearchText] = useState("");
+
+  useEffect(() => {
+    if (!currentWords) return;
+    if (!searchText) return setCurrentWords(allWords);
+
+    var filteredWords = allWords.filter((word) => {
+      return word.word.toLowerCase().includes(searchText.toLowerCase()) || word.translation.toLowerCase().includes(searchText.toLowerCase());
+    });
+    setCurrentWords(filteredWords);
+  }, [searchText]);
+
+  //------------------------------------Creating new words------------------------------------------//
+  const [createWordVisible, setCreateWordVisible] = useState(false);
+  const newWordInput = useRef(null);
+  const newWordTranslationInput = useRef(null);
+
   const [newWordText, setNewWordText] = useState("");
   const [newWordTranslationText, setNewWordTranslationText] = useState("");
   const [inputColors, setInputColors] = useState({
-    newWord: "black",
-    newWordTranslation: "black",
+    newWord: "grey",
+    newWordTranslation: "grey",
   });
 
-  const [isRequesting, setIsRequesting] = useState(false);
-
   function CheckInputs() {
-    Keyboard.dismiss();
     if (!(newWordText && newWordTranslationText)) {
       InvalidInputAlert("Missing input", "Fill all the required fields", {
-        newWord: newWordText ? "black" : "red",
-        newWordTranslation: newWordTranslationText ? "black" : "red",
+        newWord: newWordText ? "grey" : "red",
+        newWordTranslation: newWordTranslationText ? "grey" : "red",
       });
     } else {
       CreateWord();
@@ -65,29 +110,23 @@ export default function LearnScreen({ navigation }) {
 
   async function CreateWord() {
     try {
-      setIsRequesting(true);
-      const resp = await CreateWordRequest(newWordText, newWordTranslationText, username, token);
-      setIsRequesting(false);
+      const resp = await CreateWordRequest(newWordText, newWordTranslationText, username, token, InvalidInputAlert);
       if (resp.success) {
-        Alert.alert("Success", "Word created successfully");
-        setInputColors({ newWord: "black", newWordTranslation: "black" });
-      } else {
-        switch (resp.error) {
-          case "SESSION_EXPIRED":
-            InvalidInputAlert("Session expired ", "Please login again", {});
-            break;
-          case "WORD_ALREADY_EXISTS":
-            InvalidInputAlert("Word already exists", "This word and translation are already in your list!", { newWord: "red", newWordTranslation: "red" });
-            break;
-          default:
-            InvalidInputAlert("An error occured", "Please try again", {});
-            break;
-        }
+        setInputColors({ newWord: "grey", newWordTranslation: "grey" });
+        setNewWordText("");
+        setNewWordTranslationText("");
+        newWordInput.current?.focus();
+
+        const newWords = [{ word: newWordText, translation: newWordTranslationText }, ...currentWords];
+        await SecureStore.setItemAsync("cache", JSON.stringify(newWords));
+        setCurrentWords(newWords);
+        setAllWords(newWords);
       }
     } catch (e) {
       if (e === "timeout") {
-        Alert.alert("Could not login", "Check your internet connection and try again");
+        Alert.alert("Could not contact server", "Check your internet connection and try again");
       } else {
+        Alert.alert("Error", "An error has occurred, please try again later");
         console.error(e);
       }
     }
@@ -97,57 +136,15 @@ export default function LearnScreen({ navigation }) {
     setInputColors({ ...inputColors, ...invalidInputs });
   };
 
-  const WordsDisplay = () => {
-    const [words, setWords] = useState([]);
-    const [isRequesting, setIsRequesting] = useState(false);
+  //------------------------------------Changing user------------------------------------------//
+  const [changeUserVisible, setChangeUserVisible] = useState(false);
+  const [friendUsername, setFriendUsername] = useState("");
 
-    useEffect(() => {
-      const getWords = async () => {
-        try {
-          setIsRequesting(true);
-          const resp = await GetWordRequest(username, token);
-          setIsRequesting(false);
-          if (resp.success) {
-            setWords(resp.words);
-          } else {
-            switch (resp.error) {
-              case "SESSION_EXPIRED":
-                InvalidInputAlert("Session expired ", "Please login again", {});
-                break;
-              default:
-                InvalidInputAlert("An error occured", "Please try again", {});
-                break;
-            }
-          }
-        } catch (e) {
-          if (e === "timeout") {
-            Alert.alert("Could not login", "Check your internet connection and try again");
-          } else {
-            console.error(e);
-          }
-        }
-      };
-
-      getWords();
-    }, []);
-
-    return (
-      <View style={{ width: "100%", padding: 20, backgroundColor: "#444444" }}>
-        {isRequesting ? (
-          <ActivityIndicator size="large" color="#02a9ea" />
-        ) : (
-          words.map((word, index) => {
-            return (
-              <View key={index} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 10, borderBottomWidth: 1, borderBottomColor: "grey" }}>
-                <Text style={{ color: "white", fontSize: 20 }}>{word.word}</Text>
-                <Text style={{ color: "white", fontSize: 20 }}>{word.translation}</Text>
-              </View>
-            );
-          })
-        )}
-      </View>
-    );
-  };
+  function LoadOtherUser() {
+    if (friendUsername) {
+      navigation.navigate("Learn", { username: friendUsername });
+    }
+  }
 
   //------------------------------------------------------------------------------------//
   //------------------------------------WINDOW------------------------------------------//
@@ -168,10 +165,88 @@ export default function LearnScreen({ navigation }) {
           <Image source={require("../assets/images/drawerButton.png")} style={styles.backButtonImage} />
         </TouchableOpacity>
 
+        {/*--------------------------CHANGE USER---------------------------*/}
+        <Dialog.Container visible={changeUserVisible} useNativeDriver={true} onBackdropPress={() => (Keyboard.isVisible() ? Keyboard.dismiss() : setChangeUserVisible(false))}>
+          <Dialog.Title>Load friend's words?</Dialog.Title>
+          <Dialog.Description>Enter a friend's username to load his words</Dialog.Description>
+          <TextInput
+            style={styles.changeUserInput}
+            placeholder={"Enter a username"}
+            placeholderTextColor="grey"
+            autoCapitalize="sentences"
+            autoCorrect={false}
+            blurOnSubmit={true}
+            clearTextOnFocus={false}
+            multiline={false}
+            onChangeText={(text) => setFriendUsername(text)}
+            onSubmitEditing={() => {}}
+            value={friendUsername}
+          />
+          <Dialog.Button
+            label="Cancel"
+            onPress={() => {
+              Keyboard.dismiss();
+              setChangeUserVisible(false);
+            }}
+          />
+          <Dialog.Button label="OK" onPress={() => {}} />
+        </Dialog.Container>
+
+        {/*--------------------------CREATE WORD---------------------------*/}
+        <Dialog.Container visible={createWordVisible} useNativeDriver={true} onBackdropPress={() => (Keyboard.isVisible() ? Keyboard.dismiss() : setCreateWordVisible(false))}>
+          <Dialog.Title>Add a new word</Dialog.Title>
+          <Dialog.Description>Enter a word and its translation to add it to your database</Dialog.Description>
+          <TextInput
+            ref={newWordInput}
+            style={styles.changeUserInput}
+            placeholder={"Enter a new word"}
+            placeholderTextColor={inputColors.newWord}
+            autoCapitalize="sentences"
+            autoCorrect={false}
+            blurOnSubmit={false}
+            clearTextOnFocus={false}
+            multiline={false}
+            onChangeText={(text) => setNewWordText(text)}
+            onFocus={() => setInputColors({ ...inputColors, newWord: "grey" })}
+            onSubmitEditing={() => newWordTranslationInput.current?.focus()}
+            value={newWordText}
+          />
+          <TextInput
+            ref={newWordTranslationInput}
+            style={styles.changeUserInput}
+            placeholder={"Enter the translation"}
+            placeholderTextColor={inputColors.newWordTranslation}
+            autoCapitalize="sentences"
+            autoCorrect={false}
+            blurOnSubmit={false}
+            clearTextOnFocus={false}
+            multiline={false}
+            onChangeText={(text) => setNewWordTranslationText(text)}
+            onFocus={() => setInputColors({ ...inputColors, newWordTranslation: "grey" })}
+            onSubmitEditing={() => CheckInputs()}
+            value={newWordTranslationText}
+          />
+          <Dialog.Button
+            label="Quit"
+            onPress={() => {
+              Keyboard.dismiss();
+              setCreateWordVisible(false);
+            }}
+          />
+          <Dialog.Button label="Add" onPress={() => CheckInputs()} />
+        </Dialog.Container>
+
+        {/*--------------------------WINDOW---------------------------*/}
         <View style={styles.learnContainer}>
-          <View style={{ width: "100%", padding: 20, paddingTop: 50, backgroundColor: "#444444" }}>
+          <View style={{ flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+            <Text style={[styles.subTitle, { color: "black", width: "auto" }]}>{username}</Text>
+            <TouchableOpacity onPress={() => setChangeUserVisible(true)} hitSlop={styles.hitslop} style={{ width: 0, left: 10 }}>
+              <Image source={require("../assets/images/exchange.png")} style={{ height: 25, width: 25 }} />
+            </TouchableOpacity>
+          </View>
+          <View style={{ width: "100%", padding: 10, flexDirection: "row", justifyContent: "space-around", alignItems: "center" }}>
             <TextInput
-              style={styles.loginInput}
+              style={styles.searchInput}
               placeholder={"Search a word"}
               placeholderTextColor="grey"
               autoCapitalize="sentences"
@@ -179,68 +254,23 @@ export default function LearnScreen({ navigation }) {
               blurOnSubmit={true}
               clearTextOnFocus={false}
               multiline={false}
-              onChangeText={(text) => setNewWordText(text)}
-              onFocus={() => setInputColors({ ...inputColors, newWord: "black" })}
-              value={newWordText}
+              onChangeText={(text) => setSearchText(text)}
+              value={searchText}
             />
+            <TouchableOpacity
+              onPress={() => {
+                setCreateWordVisible(true);
+                setSearchText("");
+              }}
+              hitSlop={styles.hitslop}
+              style={{ width: "10%" }}
+            >
+              <Image source={require("../assets/images/plus.png")} style={{ height: 30, width: 30 }} />
+            </TouchableOpacity>
           </View>
           <WordsDisplay />
-          <View style={{ width: "100%", padding: 10, backgroundColor: "#02a9ea55", flexDirection: "row", justifyContent: "space-around" }}>
-            <Text>ENGLISH</Text>
-            <Text>TRAD</Text>
-          </View>
-          <View style={{ width: "100%", padding: 10, backgroundColor: "#02191a22", flexDirection: "row", justifyContent: "space-around" }}>
-            <Text>OTHER</Text>
-            <Text>UWU</Text>
-          </View>
-
-          <View style={styles.loginElement}>
-            <Text style={[styles.loginText, { color: inputColors.newWord }]}>New word</Text>
-            <TextInput
-              style={styles.loginInput}
-              placeholder={"Enter a new word"}
-              placeholderTextColor="grey"
-              autoCapitalize="sentences"
-              autoCorrect={false}
-              blurOnSubmit={true}
-              clearTextOnFocus={false}
-              multiline={false}
-              onChangeText={(text) => setNewWordText(text)}
-              onFocus={() => setInputColors({ ...inputColors, newWord: "black" })}
-              value={newWordText}
-            />
-          </View>
-
-          <View style={styles.loginElement}>
-            <Text style={[styles.loginText, { color: inputColors.newWordTranslation }]}>Korean translation</Text>
-            <TextInput
-              style={styles.loginInput}
-              placeholder={"Enter the translation"}
-              placeholderTextColor="grey"
-              autoCapitalize="sentences"
-              autoCorrect={false}
-              blurOnSubmit={true}
-              clearTextOnFocus={false}
-              multiline={false}
-              onChangeText={(text) => setNewWordTranslationText(text)}
-              onFocus={() => setInputColors({ ...inputColors, newWordTranslation: "black" })}
-              value={newWordTranslationText}
-            />
-          </View>
-
-          <TouchableOpacity style={styles.loginButton} onPress={() => CheckInputs()}>
-            <Text style={styles.loginButtonText}>Add</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.loginButton} onPress={() => GetWordRequest(username.trim().toLowerCase(), token)}>
-            <Text style={styles.loginButtonText}>Get words</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
-      {isRequesting && (
-        <SafeAreaView style={[styles.absoluteContainer, { backgroundColor: isRequesting ? "#00000055" : "#00000000" }]}>
-          <ActivityIndicator size="large" style={{ transform: [{ scale: 1.5 }] }} />
-        </SafeAreaView>
-      )}
     </SafeAreaView>
   );
 }

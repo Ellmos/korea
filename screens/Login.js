@@ -6,10 +6,15 @@ import * as SecureStore from "expo-secure-store";
 import { CommonActions } from "@react-navigation/native";
 import * as WebBrowser from "expo-web-browser";
 
-import styles from "../Styles.js";
 import { LoginRequest } from "../utils/Request.js";
+import { useDispatch } from "react-redux";
+import { changeWords } from "../src/actions/wordsSlice.js";
+
+import styles from "../Styles.js";
 
 export default function LoginScreen({ navigation }) {
+  const dispatch = useDispatch();
+
   const [usernameText, setUsernameText] = useState("");
   const [passwordText, setPasswordText] = useState("");
   const [passwordHidden, setPasswordHidden] = useState(true);
@@ -55,24 +60,8 @@ export default function LoginScreen({ navigation }) {
     try {
       setIsRequesting(true);
       const resp = await LoginRequest(usernameText, passwordText);
-      setIsRequesting(false);
       if (resp.success) {
-        Login(resp.token);
-      } else {
-        switch (resp.error) {
-          case "WRONG_PASSWORD":
-            Alert.alert("Login failed", "Incorrect password");
-            break;
-          case "UNKNOWN_USER":
-            Alert.alert("This username does not exist", "Try your email");
-            break;
-          case "UNKNOWN_EMAIL":
-            Alert.alert("This email does not exist", "Try your username");
-            break;
-          default:
-            Alert.alert("An error occured", "Please try again");
-            break;
-        }
+        Login(resp);
       }
     } catch (e) {
       if (e === "timeout") {
@@ -80,11 +69,15 @@ export default function LoginScreen({ navigation }) {
       } else {
         console.error(e);
       }
+    } finally {
+      setIsRequesting(false);
     }
   }
 
-  async function Login(token) {
-    await SecureStore.setItemAsync("token", token);
+  async function Login(userData) {
+    await SecureStore.setItemAsync("token", userData.token);
+    await SecureStore.setItemAsync("cache", JSON.stringify(userData.words));
+    dispatch(changeWords(userData.words));
     await SecureStore.setItemAsync("username", usernameText);
     if (stayLoggedIn) {
       await SecureStore.setItemAsync("password", passwordText);
@@ -122,7 +115,7 @@ export default function LoginScreen({ navigation }) {
                   autoCapitalize="sentences"
                   autoComplete="username"
                   autoCorrect={false}
-                  blurOnSubmit={true}
+                  blurOnSubmit={false}
                   clearTextOnFocus={false}
                   keyboardType="email-address"
                   textContentType="username"

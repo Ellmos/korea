@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Image, SafeAreaView, ImageBackground } from "react-native";
+import { View, Text, TouchableOpacity, Image, SafeAreaView } from "react-native";
 
 import * as SecureStore from "expo-secure-store";
 import { CommonActions } from "@react-navigation/native";
@@ -67,7 +67,7 @@ export default function DrawerScreen({ route, navigation }) {
           onSelect={(_, index) => {
             if (index == 0) WebBrowser.openBrowserAsync("https://sharedfolder.dynedoc.fr/wordpress/index.php/compte/" + username);
             else if (index == 1) LogOut();
-            navigation.navigate("DeleteAccount", { username: username, token: token });
+            else navigation.navigate("DeleteAccount", { username: username, token: token });
           }}
           buttonTextAfterSelection={(selectedItem) => {
             return selectedItem;

@@ -225,39 +225,85 @@ export default StyleSheet.create({
     justifyContent: "flex-start",
     width: "100%",
     height: "100%",
+    paddingTop: 40,
   },
 
-  //-----------------------------------------------------------------------//
-  //-------------------------Permission Screens----------------------------//
-  //-----------------------------------------------------------------------//
-
-  permissionTitle: {
+  changeUserInput: {
+    height: 40,
     width: "90%",
-    maxWidth: 500,
-    color: "black",
-    fontSize: 23,
+    alignSelf: "center",
+    fontSize: 15,
     fontWeight: "500",
-    textAlign: "center",
-    marginBottom: 70,
+    borderBottomWidth: 1,
+    borderColor: "grey",
+    marginBottom: 5,
   },
 
-  permissionButton: {
-    width: "55%",
-    maxWidth: 300,
-    justifyContent: "center",
-    alignContent: "center",
-    backgroundColor: "#4298fe",
+  searchInput: {
+    height: 40,
+    width: "85%",
+    fontSize: 16,
+    backgroundColor: "#fbfafd",
+    fontWeight: "500",
+    borderRadius: 7,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderColor: "grey",
+  },
+
+  wordLine: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 10,
+  },
+
+  //-----------------------------------------------------------------------//
+  //-------------------------CreateWords Screen----------------------------//
+  //-----------------------------------------------------------------------//
+
+  createContainer: {
+    width: "90%",
+    height: "30%",
+    backgroundColor: "white",
     borderRadius: 10,
-    marginBottom: 20,
-    borderWidth: 1,
-    paddingVertical: 2,
   },
 
-  permissionButtonText: {
-    fontSize: 20,
-    fontFamily: "Poppins-SemiBold",
-    color: "white",
+  createElement: {
+    width: "90%",
+    maxWidth: 350,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+
+  createInput: {
+    width: "100%",
+    height: 35,
+    fontSize: 15,
+    backgroundColor: "#fbfafd",
+    fontWeight: "500",
+    borderRadius: 7,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderColor: "grey",
+  },
+
+  createButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 35,
+    width: "50%",
+    maxWidth: 300,
+    backgroundColor: "#4298fe",
+    borderWidth: 1,
+    borderRadius: 12,
+  },
+
+  createButtonText: {
     textAlign: "center",
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "white",
   },
 
   //-----------------------------------------------------------------------//
@@ -285,7 +331,7 @@ export default StyleSheet.create({
 
   accountDropdownItemText: {
     color: "black",
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "400",
     textAlign: "center",
   },

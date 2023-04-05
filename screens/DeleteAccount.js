@@ -26,18 +26,8 @@ export default function DeleteAccountScreen({ route, navigation }) {
     try {
       setIsRequesting(true);
       const resp = await DeleteUserRequest(username.trim().toLowerCase(), passwordText, token);
-      setIsRequesting(false);
       if (resp.success) {
         DeleteAccount();
-      } else {
-        switch (resp.error) {
-          case "WRONG_PASSWORD":
-            Alert.alert("Wrong password", "Please verify your password");
-            break;
-          default:
-            Alert.alert("Error", "An error has occured");
-            break;
-        }
       }
     } catch (e) {
       if (e === "timeout") {
@@ -45,6 +35,8 @@ export default function DeleteAccountScreen({ route, navigation }) {
       } else {
         console.error(e);
       }
+    } finally {
+      setIsRequesting(false);
     }
   }
 

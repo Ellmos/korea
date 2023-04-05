@@ -52,43 +52,9 @@ export default function SignupScreen({ navigation }) {
   async function TrySignup() {
     try {
       setIsRequesting(true);
-      const resp = await SignupRequest(usernameText, passwordText, mailText);
-      setIsRequesting(false);
+      const resp = await SignupRequest(usernameText, passwordText, mailText, InvalidInputAlert);
       if (resp.success) {
         Signup(resp.token);
-      } else {
-        switch (resp.error) {
-          case "USERNAME_TOO_SHORT":
-            InvalidInputAlert("Invalid input", "Username should be at least 3 characters long", { username: "red" });
-            break;
-          case "USERNAME_TOO_LONG":
-            InvalidInputAlert("Invalid input", "Username should be at most 30 characters long", { username: "red" });
-            break;
-          case "INVALID_USERNAME":
-            InvalidInputAlert("Invalid input", "Username contains illegal characters", { username: "red" });
-            break;
-          case "LOGIN_CANT_BE_EMAIL":
-            InvalidInputAlert("Invalid input", "Login can't be an email", { username: "red" });
-            break;
-          case "INVALID_EMAIL":
-            InvalidInputAlert("Invalid input", "Email malformed", { mail: "red" });
-            break;
-          case "PASSWORD_TOO_SHORT":
-            InvalidInputAlert("Invalid input", "Password should be at least 8 characters long", { password: "red", passwordConfirm: "red" });
-            break;
-          case "PASSWORD_TOO_LONG":
-            InvalidInputAlert("Invalid input", "Password should be at most 100 characters long", { password: "red", passwordConfirm: "red" });
-            break;
-          case "USERNAME_ALREADY_TAKEN":
-            InvalidInputAlert("Could not create account", "This username is already taken", { username: "red" });
-            break;
-          case "EMAIL_ALREADY_TAKEN":
-            InvalidInputAlert("Could not create account", "This email is already taken", { mail: "red" });
-            break;
-          default:
-            InvalidInputAlert("An error occured", "Please try again", {});
-            break;
-        }
       }
     } catch (e) {
       if (e === "timeout") {
@@ -96,6 +62,8 @@ export default function SignupScreen({ navigation }) {
       } else {
         console.error(e);
       }
+    } finally {
+      setIsRequesting(false);
     }
   }
   const InvalidInputAlert = (title, message, invalidInputs) => {
@@ -151,6 +119,7 @@ export default function SignupScreen({ navigation }) {
                   autoComplete="username"
                   autoCorrect={false}
                   clearTextOnFocus={false}
+                  blurOnSubmit={false}
                   keyboardType="email-address"
                   textContentType="username"
                   multiline={false}
@@ -172,6 +141,7 @@ export default function SignupScreen({ navigation }) {
                   autoComplete="email"
                   autoCorrect={false}
                   clearTextOnFocus={false}
+                  blurOnSubmit={false}
                   keyboardType="email-address"
                   textContentType="username"
                   multiline={false}
@@ -193,6 +163,7 @@ export default function SignupScreen({ navigation }) {
                     autoCorrect={false}
                     clearTextOnFocus={false}
                     textAlign="left"
+                    blurOnSubmit={false}
                     textContentType="password"
                     secureTextEntry={passwordHidden}
                     multiline={false}
