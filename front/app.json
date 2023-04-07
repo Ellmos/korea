@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "korea",
+    "slug": "korea",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.elmos.korea",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Turning on location allows us to locate your device instead of manually writing your position.",
+        "NSCameraUsageDescription": "This app uses the camera to take a photo for more information about the RE-MED point.",
+        "NSPhotoLibraryUsageDescription": "This app uses the photo library to import a photo for more information about the RE-MED point."
+      }
+    },
+    "android": {
+      "softwareKeyboardLayoutMode": "pan",
+      "permissions": [],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "package": "com.elmos.korea",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
